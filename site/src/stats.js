@@ -14,3 +14,25 @@ export function ridesByCity(rows) {
     .map(([city, rides]) => ({ city, rides }))
     .sort((a, b) => a.city.localeCompare(b.city));
 }
+
+// Monthly rides per city, one entry per calendar month (YYYY-MM) in date order.
+// Every city appears in every month, alphabetically; a city with no rows in a month gets 0.
+export function monthlyRidesByCity(rows) {
+  const months = new Map();
+  const allCities = new Set();
+  for (const row of rows) {
+    const month = row.date.slice(0, 7);
+    if (!months.has(month)) months.set(month, new Map());
+    const cities = months.get(month);
+    cities.set(row.city, (cities.get(row.city) ?? 0) + Number(row.rides));
+    allCities.add(row.city);
+  }
+  const cityNames = [...allCities].sort((a, b) => a.localeCompare(b));
+  return [...months.entries()]
+    .sort(([a], [b]) => a.localeCompare(b))
+    .map(([month, totals]) => {
+      const cities = cityNames.map((city) => ({ city, rides: totals.get(city) ?? 0 }));
+      const total = cities.reduce((sum, c) => sum + c.rides, 0);
+      return { month, cities, total };
+    });
+}
