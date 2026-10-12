@@ -36,3 +36,11 @@ export function monthlyRidesByCity(rows) {
       return { month, cities, total };
     });
 }
+
+const MONTH_NAMES = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+
+// Display name for a calendar month in YYYY-MM form, e.g. "2026-07" -> "Jul 2026".
+export function monthLabel(month) {
+  const [year, number] = month.split("-");
+  return `${MONTH_NAMES[Number(number) - 1]} ${year}`;
+}

@@ -1,6 +1,6 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { totalRides, ridesByCity, monthlyRidesByCity } from "../site/src/stats.js";
+import { totalRides, ridesByCity, monthlyRidesByCity, monthLabel } from "../site/src/stats.js";
 
 const rows = [
   { date: "2026-07-01", city: "Miami", rides: "10" },
@@ -74,4 +74,10 @@ test("monthlyRidesByCity gives a city with no rides in a month zero monthly ride
 
 test("monthlyRidesByCity returns no months for no rows", () => {
   assert.deepEqual(monthlyRidesByCity([]), []);
+});
+
+test("monthLabel names a month like Jul 2026", () => {
+  assert.equal(monthLabel("2026-07"), "Jul 2026");
+  assert.equal(monthLabel("2026-12"), "Dec 2026");
+  assert.equal(monthLabel("2027-01"), "Jan 2027");
 });
