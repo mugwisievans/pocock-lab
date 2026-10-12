@@ -14,6 +14,10 @@
   <main>
     <p id="status" aria-live="polite">Loading data&hellip;</p>
     <section>
+      <ul id="legend" class="legend"></ul>
+      <svg id="chart" class="stacked-chart" viewBox="0 0 600 320" role="img" aria-labelledby="chart-title">
+        <title id="chart-title">Stacked bar chart of monthly rides by city</title>
+      </svg>
       <table id="monthly">
         <thead><tr><th>Month</th></tr></thead>
         <tbody></tbody>
@@ -23,13 +27,28 @@
   <script type="module">
     import { parseCsv } from "./src/csv.js";
     import { monthlyRidesByCity, monthLabel } from "./src/stats.js";
+    import { layoutStackedBars } from "./src/chart.js";
 
     const status = document.getElementById("status");
     const table = document.getElementById("monthly");
+    const legend = document.getElementById("legend");
+    const chart = document.getElementById("chart");
+
+    // Plot area inside the 600x320 viewBox, leaving room for axis labels.
+    const margin = { top: 10, right: 10, bottom: 30, left: 72 };
+    const plot = { width: 600 - margin.left - margin.right, height: 320 - margin.top - margin.bottom };
+    const SERIES_COUNT = 6; // colour classes defined in style.css
 
     const cell = (tag, text) => {
       const el = document.createElement(tag);
       el.textContent = text;
+      return el;
+    };
+
+    const svg = (tag, attrs, text) => {
+      const el = document.createElementNS("http://www.w3.org/2000/svg", tag);
+      for (const [name, value] of Object.entries(attrs)) el.setAttribute(name, value);
+      if (text !== undefined) el.textContent = text;
       return el;
     };
 
@@ -45,6 +64,32 @@
 
     if (rows) {
       const months = monthlyRidesByCity(rows);
+      const cityNames = (months[0]?.cities ?? []).map((c) => c.city);
+      const seriesClass = (city) => `series-${cityNames.indexOf(city) % SERIES_COUNT}`;
+
+      for (const city of cityNames) {
+        const swatch = document.createElement("span");
+        swatch.className = `swatch ${seriesClass(city)}`;
+        const item = document.createElement("li");
+        item.append(swatch, city);
+        legend.appendChild(item);
+      }
+
+      const layout = layoutStackedBars(months, plot);
+      const g = svg("g", { transform: `translate(${margin.left} ${margin.top})` });
+      for (const { value, y } of layout.gridlines) {
+        g.appendChild(svg("line", { class: "gridline", x1: 0, x2: plot.width, y1: y, y2: y }));
+        g.appendChild(svg("text", { class: "axis-label", x: -8, y, "text-anchor": "end", "dominant-baseline": "middle" }, value.toLocaleString("en-US")));
+      }
+      for (const { month, x, width, segments } of layout.bars) {
+        for (const segment of segments) {
+          const rect = svg("rect", { class: seriesClass(segment.city), x: segment.x, y: segment.y, width: segment.width, height: segment.height });
+          rect.appendChild(svg("title", {}, `${segment.city}, ${monthLabel(month)}: ${segment.rides.toLocaleString("en-US")}`));
+          g.appendChild(rect);
+        }
+        g.appendChild(svg("text", { class: "axis-label", x: x + width / 2, y: plot.height + 20, "text-anchor": "middle" }, monthLabel(month)));
+      }
+      chart.appendChild(g);
 
       const headRow = table.querySelector("thead tr");
       for (const { city } of months[0]?.cities ?? []) headRow.appendChild(cell("th", city));
