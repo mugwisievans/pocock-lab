@@ -22,17 +22,10 @@
   </main>
   <script type="module">
     import { parseCsv } from "./src/csv.js";
-    import { monthlyRidesByCity } from "./src/stats.js";
+    import { monthlyRidesByCity, monthLabel } from "./src/stats.js";
 
     const status = document.getElementById("status");
     const table = document.getElementById("monthly");
-
-    const monthLabel = (month) =>
-      new Date(`${month}-01T00:00:00Z`).toLocaleString("en-US", {
-        month: "short",
-        year: "numeric",
-        timeZone: "UTC",
-      });
 
     const cell = (tag, text) => {
       const el = document.createElement(tag);
@@ -40,10 +33,18 @@
       return el;
     };
 
+    let rows;
     try {
       const response = await fetch("./data/rides.csv");
       if (!response.ok) throw new Error(`HTTP ${response.status}`);
-      const months = monthlyRidesByCity(parseCsv(await response.text()));
+      rows = parseCsv(await response.text());
+    } catch {
+      table.closest("section").remove();
+      status.textContent = "Could not load ride data";
+    }
+
+    if (rows) {
+      const months = monthlyRidesByCity(rows);
 
       const headRow = table.querySelector("thead tr");
       for (const { city } of months[0]?.cities ?? []) headRow.appendChild(cell("th", city));
@@ -53,14 +54,11 @@
       for (const { month, cities, total } of months) {
         const tr = document.createElement("tr");
         tr.appendChild(cell("th", monthLabel(month)));
-        for (const { rides } of cities) tr.appendChild(cell("td", rides.toLocaleString()));
-        tr.appendChild(cell("td", total.toLocaleString()));
+        for (const { rides } of cities) tr.appendChild(cell("td", rides.toLocaleString("en-US")));
+        tr.appendChild(cell("td", total.toLocaleString("en-US")));
         tbody.appendChild(tr);
       }
       status.remove();
-    } catch {
-      table.remove();
-      status.textContent = "Could not load ride data";
     }
   </script>
 </body>
