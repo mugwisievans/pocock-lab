@@ -1,0 +1,65 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Monthly rides by city</title>
+  <link rel="stylesheet" href="./style.css">
+</head>
+<body>
+  <header>
+    <h1>Monthly rides by city</h1>
+    <nav><a href="./index.html">Home</a><a href="./monthly.html">Monthly</a></nav>
+  </header>
+  <main>
+    <p id="status" aria-live="polite">Loading data&hellip;</p>
+    <section>
+      <table id="monthly">
+        <thead><tr><th>Month</th></tr></thead>
+        <tbody></tbody>
+      </table>
+    </section>
+  </main>
+  <script type="module">
+    import { parseCsv } from "./src/csv.js";
+    import { monthlyRidesByCity, monthLabel } from "./src/stats.js";
+
+    const status = document.getElementById("status");
+    const table = document.getElementById("monthly");
+
+    const cell = (tag, text) => {
+      const el = document.createElement(tag);
+      el.textContent = text;
+      return el;
+    };
+
+    let rows;
+    try {
+      const response = await fetch("./data/rides.csv");
+      if (!response.ok) throw new Error(`HTTP ${response.status}`);
+      rows = parseCsv(await response.text());
+    } catch {
+      table.closest("section").remove();
+      status.textContent = "Could not load ride data";
+    }
+
+    if (rows) {
+      const months = monthlyRidesByCity(rows);
+
+      const headRow = table.querySelector("thead tr");
+      for (const { city } of months[0]?.cities ?? []) headRow.appendChild(cell("th", city));
+      headRow.appendChild(cell("th", "Total"));
+
+      const tbody = table.querySelector("tbody");
+      for (const { month, cities, total } of months) {
+        const tr = document.createElement("tr");
+        tr.appendChild(cell("th", monthLabel(month)));
+        for (const { rides } of cities) tr.appendChild(cell("td", rides.toLocaleString("en-US")));
+        tr.appendChild(cell("td", total.toLocaleString("en-US")));
+        tbody.appendChild(tr);
+      }
+      status.remove();
+    }
+  </script>
+</body>
+</html>
