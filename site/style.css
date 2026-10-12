@@ -7,3 +7,19 @@ th, td { border: 1px solid #d0d0d0; padding: 0.3rem 0.8rem; text-align: left; }
 th { background: #f2f2f2; }
 .bars { display: flex; flex-direction: column; gap: 0.4rem; margin: 1rem 0; }
 .bar { background: #028090; color: #ffffff; padding: 0.3rem 0.6rem; border-radius: 3px; white-space: nowrap; min-width: 6rem; }
+.legend { display: flex; flex-wrap: wrap; gap: 1rem; list-style: none; padding: 0; margin: 1rem 0 0.5rem; }
+.legend li { display: flex; align-items: center; gap: 0.4rem; }
+.swatch { display: inline-block; width: 0.9rem; height: 0.9rem; border-radius: 2px; }
+.stacked-chart { display: block; width: 100%; height: auto; }
+.stacked-chart .gridline { stroke: #d0d0d0; stroke-width: 1; }
+.stacked-chart .axis-label { font-size: 12px; fill: #555555; }
+.series-0 { fill: #028090; background: #028090; }
+.series-1 { fill: #f4a259; background: #f4a259; }
+.series-2 { fill: #5b5f97; background: #5b5f97; }
+.series-3 { fill: #e84855; background: #e84855; }
+.series-4 { fill: #8cb369; background: #8cb369; }
+.series-5 { fill: #7a4419; background: #7a4419; }
+@media (max-width: 30rem) {
+  th, td { padding: 0.3rem 0.4rem; }
+  .stacked-chart .axis-label { font-size: 18px; }
+}
